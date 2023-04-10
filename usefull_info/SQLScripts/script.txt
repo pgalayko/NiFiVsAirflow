@@ -1,0 +1,36 @@
+-- table person цепляем последней
+/*select count(*)
+from person.person
+
+-- условие по personPhone
+select count(businessentityid)
+from person.personphone
+where phonenumbertypeid <> 2
+
+select * 
+from person.businessentitycontact
+where contacttypeid not in (11, 12)
+
+select *
+from humanresources.employee */
+
+with persPhone as (
+	select businessentityid as id, 
+		   phonenumber
+	from person.personphone
+	where phonenumbertypeid <> 2
+), person as (
+	select businessentityid as id,
+		   firstname || ' ' || coalesce(middlename, '') || ' ' || lastname as fio
+	from person.person
+)
+select p.id, p.fio
+	 , e.birthdate
+	 , pp.phonenumber
+	 , e.jobtitle
+	 , e.vacationhours
+	 , e.sickleavehours
+from person p
+join persPhone pp on p.id = pp.id
+left join humanresources.employee e on p.id = e.businessentityid
+

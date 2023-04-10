@@ -2,3 +2,4 @@
 /bin/postgresDb/pgdata/
 /bin/nifi_registry/
 /.idea/
+/bin/postgresDb/AdventureWorks/data/

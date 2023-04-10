@@ -1,0 +1,71 @@
+version: "3.9"
+services:
+
+  nifi-registry:
+    container_name: nifi-registry_container
+    image: apache/nifi-registry:0.5.0
+    ports:
+      - 18080:18080
+    volumes:
+      - ../bin/nifi_registry/flow_storage:/opt/nifi-registry/nifi-registry-current/flow_storage # Сохраняем локально созданные потоки
+
+  nifi:
+    image: apache/nifi:1.20.0
+    container_name: nifi_cont
+    depends_on:
+     - nifi-registry
+    networks:
+      - docker-nifi-postgres
+    hostname: nifi
+    ports:
+      - 8080:8080
+    environment:
+      - NIFI_SENSITIVE_PROPS_KEY=1234567890qaz
+      - NIFI_WEB_HTTP_PORT=8080
+      - NIFI_ELECTION_MAX_WAIT=1 min
+    volumes:
+      - ../bin/nifi/drivers/:/opt/nifi/nifi-current/drivers
+      
+  postgres:
+    container_name: postgres_container
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "dwh"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "admin1qaz"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes: # располашаем в определенной папке скрипты для инициализации бд
+      - ../bin/postgresDb/AdventureWorks/:/docker-entrypoint-initdb.d/
+      - ../bin/postgresDb/:/var/lib/postgresql/data # позволяет хранить данные в папке проекта
+    ports:
+      - "5432:5432"
+    networks:
+      - docker-nifi-postgres
+      
+  # Добавляем UI    
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4:5.7
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "pgalaiko@neoflex.ru"
+      PGADMIN_DEFAULT_PASSWORD: "admin1qaz"
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - ../bin/pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    restart: unless-stopped
+    # Добавляем ограничения по ресурсам
+    # deploy: 
+      # resources:
+        # limits:
+          # cpus: '0.5'
+          # memory: 1G
+    networks:
+      - docker-nifi-postgres
+
+networks:
+  docker-nifi-postgres:
+    driver: bridge
