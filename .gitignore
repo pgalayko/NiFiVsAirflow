@@ -1,0 +1,4 @@
+/bin/pgadmin/
+/bin/postgresDb/pgdata/
+/bin/nifi_registry/
+/.idea/
