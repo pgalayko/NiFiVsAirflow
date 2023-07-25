@@ -1,14 +1,5 @@
 version: "3.9"
 services:
-
-  nifi-registry:
-    container_name: nifi-registry_container
-    image: apache/nifi-registry:0.5.0
-    ports:
-      - 18080:18080
-    volumes:
-      - ../bin/nifi_registry/flow_storage:/opt/nifi-registry/nifi-registry-current/flow_storage # Сохраняем локально созданные потоки
-
   nifi:
     image: apache/nifi:1.20.0
     container_name: nifi_cont
@@ -23,8 +14,12 @@ services:
       - NIFI_SENSITIVE_PROPS_KEY=1234567890qaz
       - NIFI_WEB_HTTP_PORT=8080
       - NIFI_ELECTION_MAX_WAIT=1 min
+      - WORKDIR=/opt/nifi/nifi-current
     volumes:
       - ../bin/nifi/drivers/:/opt/nifi/nifi-current/drivers # Монтируем папку с драйверами для подключения к БД
+      - ../bin/nifi/python_scripts/:/opt/nifi/nifi-current/python_scripts
+      - ../bin/nifi/bin/:/opt/nifi/nifi-current/bin/
+      - C:\Users\Professional\AppData\Local\Programs\Python\Python311:/opt/nifi/nifi-current/python311
       
   postgres:
     container_name: postgres_container
@@ -38,31 +33,7 @@ services:
       - ../bin/postgresDb/AdventureWorks/:/docker-entrypoint-initdb.d/ # располагаем скрипт для инициализации БД
       - ../bin/postgresDb/:/var/lib/postgresql/data # позволяет хранить данные в папке проекта
     ports:
-      - "5432:5432"
-    networks:
-      - docker-nifi-postgres
-      
-  # Добавляем UI. Сделано для удобного доступа к БД.
-  pgadmin:
-    container_name: pgadmin_container
-    image: dpage/pgadmin4:5.7
-    depends_on:
-      - postgres
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "pgalaiko@neoflex.ru"
-      PGADMIN_DEFAULT_PASSWORD: "admin1qaz"
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-    volumes:
-      - ../bin/pgadmin:/var/lib/pgadmin
-    ports:
-      - "5050:80"
-    restart: unless-stopped
-    # Добавляем ограничения по ресурсам при необходимости
-    # deploy: 
-      # resources:
-        # limits:
-          # cpus: '0.5'
-          # memory: 1G
+      - "5433:5432"
     networks:
       - docker-nifi-postgres
 
