@@ -1,42 +1,52 @@
-with sales_customer as (
+with salesorderheader as (
+	select s.salesorderid 
+		  ,s.customerid
+		  ,s.salespersonid 
+		  ,s.shiptoaddressid
+		  ,cast(s.orderdate as date) 
+		  ,cast(s.shipdate as date)
+		  ,cast(s.duedate as date)
+		  ,case 
+			when s.status = 1 then 'In progress'
+			when s.status = 2 then 'Approved'
+			when s.status = 3 then 'Backordered'
+			when s.status = 4 then 'Rejected'
+			when s.status = 5 then 'Shipped'
+			when s.status = 6 then 'Canceled'
+			else 'Unknown'
+		  end as status
+		  ,s.subtotal
+	from sales.salesorderheader s
+), customer as (
+	select customerid
+		  ,storeid
+	from sales.customer
+), store as (
+	select businessentityid
+		  ,st."name" as store_name
+	from sales.store
+), address as (
+	select addressid
+		  ,concat(addressline1, ', ', city) as ship_to_address
+	from person.address
+)
 select s.salesorderid 
  	  ,s.customerid 
  	  ,c.storeid 
  	  ,s.salespersonid 
  	  ,s.shiptoaddressid
- 	  ,concat(a.addressline1, ', ', a.city) as ship_to_address
- 	  ,st."name" as store_name
- 	  ,cast(s.orderdate as date) 
- 	  ,cast(s.shipdate as date)
- 	  ,cast(s.duedate as date)
- 	  ,case 
- 	  	when s.status = 1 then 'In progress'
- 	  	when s.status = 2 then 'Approved'
- 	  	when s.status = 3 then 'Backordered'
- 	  	when s.status = 4 then 'Rejected'
- 	  	when s.status = 5 then 'Shipped'
- 	  	when s.status = 6 then 'Canceled'
- 	  	else 'Unknown'
- 	  end as status
- 	  ,s.subtotal
-from sales.salesorderheader s 
-left join sales.customer c on s.customerid = c.customerid
-left join sales.store st on c.storeid = st.businessentityid
-left join person.address a on s.shiptoaddressid = a.addressid
-)--, sales_shipto as (
-select s.salesorderid 
- 	  ,s.customerid 
- 	  ,s.storeid 
- 	  ,s.salespersonid 
- 	  ,s.shiptoaddressid 
- 	  ,s.ship_to_address
- 	  ,s.store_name
+ 	  ,a.ship_to_address
+ 	  ,st.store_name
  	  ,s.orderdate
  	  ,s.shipdate
  	  ,s.duedate
  	  ,s.status
  	  ,s.subtotal
-from sales_customer s
+from salesorderheader s 
+left join customer c on s.customerid = c.customerid
+left join store st on c.storeid = st.businessentityid
+left join address a on s.shiptoaddressid = a.addressid
+
 
 
 
